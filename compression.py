@@ -281,24 +281,7 @@ def get_size(filename):
 
 def rl_encode(img, redClar=1):
 
-    # Show the original image
-    # plt.imshow(img)
-    # plt.show()
-
-    # Reduce the clarity of the image to redClar
-    # img = get_greyscale_image(img)
-    # img = img[:,:,0]
-
-    # img = np.random.randint(0, 256, (15, 15))
-
-    # img = img.tolist()
-
-    # print("grey img")
-    # print(img)
-    # print("line 38")
-
-    # plt.imshow(img, cmap="gray")
-    # plt.show()
+    
     less_img = [[0 for j in range(len(img[0]))] for i in range(len(img))]
 
     for i in range(len(img)):
@@ -307,15 +290,7 @@ def rl_encode(img, redClar=1):
 
     less_img = np.array(less_img)
 
-    # print("less_img")
-    # print(less_img)
-    # print("line 48")
-    # print("less img 0")
-    # print(less_img[0])
-    # print("line 55")
-
-    # plt.imshow(less_img, cmap = "gray")
-    # plt.show()
+    
 
     # Flatten, then compress the image
     encoded = []
@@ -524,7 +499,7 @@ if __name__ == '__main__':
               Replace the <file> with the address of the image file\n\
               Replace the <option> with compression technique you want to be performed\n\
               Replace <type> with the image type you want to use in the program\n\
-              The options are fractal-rgb or fractal-grey or run-length\n\
+              The options are fractal-rgb or fractal-grey or run-length-grey or run-length-rgb\n\
               Type the line below to the command line to get more info:\n\
               python3 compression.py -h"
 
