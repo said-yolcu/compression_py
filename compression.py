@@ -201,8 +201,13 @@ candidates = [[direction, angle]
 # Tests
 
 
-def test_greyscale(img_name):
-    img = mpimg.imread(img_name)
+def test_greyscale(img_name, typ):
+    img = []
+    if typ == "png":
+        img = np.asarray(Image.open(img_name))
+    elif typ == "gif":
+        img = mpimg.imread(img_name)
+
     img = get_greyscale_image(img)
     img = reduce(img, 4)
     plt.figure()
@@ -213,8 +218,13 @@ def test_greyscale(img_name):
     plt.show()
 
 
-def test_rgb(img_name):
-    img = mpimg.imread(img_name)
+def test_rgb(img_name, typ):
+    img = []
+    if typ == "png":
+        img = np.asarray(Image.open(img_name))
+    elif typ == "gif":
+        img = mpimg.imread(img_name)
+
     img = reduce_rgb(img, 8)
     transformations = compress_rgb(img, 8, 4, 8)
     retrieved_img = decompress_rgb(transformations, 8, 4, 8)
@@ -276,15 +286,16 @@ def rl_encode(img, redClar=1):
     # plt.show()
 
     # Reduce the clarity of the image to redClar
-    img = get_greyscale_image(img)
+    # img = get_greyscale_image(img)
+    # img = img[:,:,0]
 
     # img = np.random.randint(0, 256, (15, 15))
 
     # img = img.tolist()
 
-    print("grey img")
-    print(img)
-    print("line 38")
+    # print("grey img")
+    # print(img)
+    # print("line 38")
 
     # plt.imshow(img, cmap="gray")
     # plt.show()
@@ -296,12 +307,12 @@ def rl_encode(img, redClar=1):
 
     less_img = np.array(less_img)
 
-    print("less_img")
-    print(less_img)
-    print("line 48")
-    print("less img 0")
-    print(less_img[0])
-    print("line 55")
+    # print("less_img")
+    # print(less_img)
+    # print("line 48")
+    # print("less img 0")
+    # print(less_img[0])
+    # print("line 55")
 
     # plt.imshow(less_img, cmap = "gray")
     # plt.show()
@@ -358,14 +369,14 @@ def rl_encode(img, redClar=1):
         # print("line 358 encoding", (count, prev))
         encoded.append((count, prev))
 
-    print("length of fimg is ", len(fimg))
+    # print("length of fimg is ", len(fimg))
 
-    x_sum =0
+    x_sum = 0
 
     for [x, pixel] in np.array(encoded):
-        x_sum+= x
+        x_sum += x
 
-    print("x_sum is ", x_sum)
+    # print("x_sum is ", x_sum)
 
     return [np.array(encoded).astype(np.uint32), less_img]
 
@@ -380,14 +391,71 @@ def rl_decode(encoded, shape):
     dimg = np.array(decoded).reshape(shape)
     return dimg
 
+def test_run_length_rgb(fpath):
+    # Open the image
+    preimg = np.asarray(Image.open(fpath))
+
+    img0 = preimg[:,:,0]
+    img1 = preimg[:,:,1]
+    img2 = preimg[:,:,2]
+
+    # Encode the image
+    [encoded0, less_img0] = rl_encode(img0)
+    [encoded1, less_img1] = rl_encode(img1)
+    [encoded2, less_img2] = rl_encode(img2)
+
+    # plt.imshow(less_img, cmap="gray")
+    # plt.show()
+
+    # print("encoded0 is ", encoded0)
+
+    # Encoding sure does reduce the size
+    print("sizes")
+    print(sys.getsizeof(img0)+sys.getsizeof(img1)+sys.getsizeof(img2))
+    print(sys.getsizeof(encoded0)+ sys.getsizeof(encoded1)+ sys.getsizeof(encoded2))
+
+    # print("encoded dimensions: {} by {}".format(encoded[0], encoded[1]))
+
+    # Decode the encoding to another image
+    shape = preimg.shape
+    dimg0 = rl_decode(encoded0, (shape[0], shape[1]))
+    dimg1 = rl_decode(encoded1, (shape[0], shape[1]))
+    dimg2 = rl_decode(encoded2, (shape[0], shape[1]))
+
+    # Calculate the standard deviation betweeen decoding and the original image
+    diff_sum = 0
+    for i in range(len(less_img0)):
+        for j in range(len(less_img0[0])):
+            diff_sum += (less_img0[i][j]-dimg0[i][j])**2
+
+    std_dev = (diff_sum/(i*j))**(1/2)
+    print("standard deviation is {}".format(std_dev))
+
+    # Create a figure to show the original, grayscale and decoded images
+    fig, axs = plt.subplots(1, 2)
+
+    dimg = np.array([[[0 for i in range(3)] for j in range(len(dimg0[0]))] for k in range(len(dimg0))])
+
+    # print(dimg0)
+
+    dimg[:,:,0] = dimg0
+    dimg[:,:,1] = dimg1
+    dimg[:,:,2] = dimg2
+
+    axs[0].imshow(preimg)
+    axs[0].set_title("Original image")
+    axs[1].imshow(dimg)
+    axs[1].set_title("Decoded image")
+    plt.show()
+
+
 
 def test_run_length(fpath):
 
     # Open the image
-    img = np.asarray(Image.open(fpath))
+    preimg = np.asarray(Image.open(fpath))
 
-    # plt.imshow(img)
-    # plt.show()
+    img = get_greyscale_image(preimg)
 
     # Encode the image
     [encoded, less_img] = rl_encode(img)
@@ -395,9 +463,10 @@ def test_run_length(fpath):
     # plt.imshow(less_img, cmap="gray")
     # plt.show()
 
-    print("encoded is ", encoded)
+    # print("encoded is ", encoded)
 
     # Encoding sure does reduce the size
+    print("sizes")
     print(sys.getsizeof(img))
     print(sys.getsizeof(encoded))
 
@@ -419,15 +488,12 @@ def test_run_length(fpath):
     # Create a figure to show the original, grayscale and decoded images
     fig, axs = plt.subplots(1, 3)
 
-    axs[0].imshow(img)
+    axs[0].imshow(preimg)
     axs[0].set_title("Original image")
-
     axs[1].imshow(less_img, cmap="gray")
     axs[1].set_title("Gray image")
-
     axs[2].imshow(dimg, cmap="gray")
     axs[2].set_title("Decoded image")
-
     plt.show()
 
 
@@ -442,8 +508,9 @@ if __name__ == '__main__':
 
     # Define the command-line arguments
     parser.add_argument("-f", "--file", help="Image file path")
-    parser.add_argument(
-        "-o", "--option", help="Compression-decompression technique")
+    parser.add_argument("-o", "--option",
+                        help="Compression-decompression technique")
+    parser.add_argument("-t", "--type", help="Type of the image")
 
     # Parse the command line
     args = parser.parse_args()
@@ -451,10 +518,12 @@ if __name__ == '__main__':
     # Access the argument values
     file_path = args.file
     opt = args.option
+    typ = args.type
 
-    err_msg = "Correct usage is: python3 compression.py -f <file> -o <option>\n\
+    err_msg = "Correct usage is: python3 compression.py -f <file> -o <option> -t <type>\n\
               Replace the <file> with the address of the image file\n\
               Replace the <option> with compression technique you want to be performed\n\
+              Replace <type> with the image type you want to use in the program\n\
               The options are fractal-rgb or fractal-grey or run-length\n\
               Type the line below to the command line to get more info:\n\
               python3 compression.py -h"
@@ -463,12 +532,14 @@ if __name__ == '__main__':
         print(err_msg)
 
     elif (opt == "fractal-rgb"):
-        test_rgb(file_path)
+        test_rgb(file_path, typ)
 
     elif (opt == "fractal-grey"):
-        test_greyscale(file_path)
-    elif (opt == "run-length"):
+        test_greyscale(file_path, typ)
+    elif (opt == "run-length-grey"):
         test_run_length(file_path)
+    elif (opt == "run-length-rgb"):
+        test_run_length_rgb(file_path)
 
     else:
         print(err_msg)
